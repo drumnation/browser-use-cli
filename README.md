@@ -1,3 +1,32 @@
+# Fork Purpose
+
+This fork of browser-use/web-ui adds CLI support specifically designed for AI agents like Cursor Agent. It enables direct command-line interaction with browser automation tasks, making it ideal for integration with AI development environments and automated workflows.
+
+## CLI Documentation
+
+- [Usage Guide](cli/usage-guide.md) - Comprehensive guide for CLI usage, including:
+  - Model configuration (DeepSeek, Gemini, GPT-4, Claude-3)
+  - Browser automation tasks
+  - Tracing and debugging
+  - Report generation
+
+### Example Tasks
+
+The [browser-tasks-example.ts](cli/browser-tasks-example.ts) provides ready-to-use task sequences for:
+
+- Product research automation
+- Documentation analysis
+- Page structure analysis
+- Debug sessions with tracing
+
+### Configuration
+
+See [.env.example](.env.example) for all available configuration options, including:
+
+- API keys for different LLM providers
+- Browser settings
+- Session persistence options
+
 <img src="./assets/web-ui.png" alt="Browser Use Web UI" width="full"/>
 
 <br/>
@@ -60,6 +89,7 @@ playwright install
    - Git to clone the repository
 
 2. **Setup:**
+
    ```bash
    # Clone the repository
    git clone https://github.com/browser-use/web-ui.git
@@ -71,6 +101,7 @@ playwright install
    ```
 
 3. **Run with Docker:**
+
    ```bash
    # Build and start the container with default settings (browser closes after AI tasks)
    docker compose up --build
@@ -82,18 +113,20 @@ playwright install
 4. **Access the Application:**
    - WebUI: `http://localhost:7788`
    - VNC Viewer (to see browser interactions): `http://localhost:6080/vnc.html`
-   
-   Default VNC password is "vncpassword". You can change it by setting the `VNC_PASSWORD` environment variable in your `.env` file.
 
+   Default VNC password is "vncpassword". You can change it by setting the `VNC_PASSWORD` environment variable in your `.env` file.
 
 ## Usage
 
 ### Local Setup
-1.  Copy `.env.example` to `.env` and set your environment variables, including API keys for the LLM. `cp .env.example .env`
-2.  **Run the WebUI:**
+
+1. Copy `.env.example` to `.env` and set your environment variables, including API keys for the LLM. `cp .env.example .env`
+2. **Run the WebUI:**
+
     ```bash
     python webui.py --ip 127.0.0.1 --port 7788
     ```
+
 4. WebUI options:
    - `--ip`: The IP address to bind the WebUI to. Default is `127.0.0.1`.
    - `--port`: The port to bind the WebUI to. Default is `7788`.
@@ -106,20 +139,24 @@ playwright install
      - **Citrus**: A vibrant, citrus-inspired palette with bright and fresh colors.
      - **Ocean** (default): A blue, ocean-inspired theme providing a calming effect.
    - `--dark-mode`: Enables dark mode for the user interface.
-3.  **Access the WebUI:** Open your web browser and navigate to `http://127.0.0.1:7788`.
-4.  **Using Your Own Browser(Optional):**
+3. **Access the WebUI:** Open your web browser and navigate to `http://127.0.0.1:7788`.
+4. **Using Your Own Browser(Optional):**
     - Set `CHROME_PATH` to the executable path of your browser and `CHROME_USER_DATA` to the user data directory of your browser.
       - Windows
+
         ```env
          CHROME_PATH="C:\Program Files\Google\Chrome\Application\chrome.exe"
          CHROME_USER_DATA="C:\Users\YourUsername\AppData\Local\Google\Chrome\User Data"
         ```
+
         > Note: Replace `YourUsername` with your actual Windows username for Windows systems.
       - Mac
+
         ```env
          CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
          CHROME_USER_DATA="~/Library/Application Support/Google/Chrome/Profile 1"
         ```
+
     - Close all Chrome windows
     - Open the WebUI in a non-Chrome browser, such as Firefox or Edge. This is important because the persistent browser context will use the Chrome data when running the agent.
     - Check the "Use Own Browser" option within the Browser Settings.
@@ -127,9 +164,11 @@ playwright install
     - Set `CHROME_PERSISTENT_SESSION=true` in the `.env` file.
 
 ### Docker Setup
+
 1. **Environment Variables:**
    - All configuration is done through the `.env` file
    - Available environment variables:
+
      ```
      # LLM API Keys
      OPENAI_API_KEY=your_key_here
@@ -164,6 +203,7 @@ playwright install
    - You can now see all browser interactions in real-time
 
 4. **Container Management:**
+
    ```bash
    # Start with persistent browser
    CHROME_PERSISTENT_SESSION=true docker compose up -d
