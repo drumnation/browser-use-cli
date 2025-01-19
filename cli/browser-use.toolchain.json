@@ -1,0 +1,50 @@
+{
+    "name": "browser-use",
+    "description": "Execute natural language browser automation commands",
+    "type": "terminal_command",
+    "functions": [
+        {
+            "name": "browser_command",
+            "description": "Control a browser using natural language instructions",
+            "parameters": {
+                "properties": {
+                    "prompt": {
+                        "type": "string",
+                        "description": "The natural language instruction (e.g., 'go to google.com and search for OpenAI')"
+                    },
+                    "model": {
+                        "type": "string",
+                        "enum": ["deepseek-chat", "gemini", "gpt-4", "claude-3"],
+                        "default": "deepseek-chat",
+                        "description": "The LLM model to use (optional)"
+                    },
+                    "headless": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Run browser in headless mode (optional)"
+                    },
+                    "vision": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Enable vision capabilities for supported models (optional)"
+                    }
+                },
+                "required": ["prompt"]
+            }
+        }
+    ],
+    "examples": [
+        {
+            "description": "Basic usage",
+            "command": "browser-use \"go to google.com and search for OpenAI\""
+        },
+        {
+            "description": "Using vision to analyze a webpage",
+            "command": "browser-use \"go to openai.com and tell me what you see\" --model gemini --vision"
+        },
+        {
+            "description": "Running a check in headless mode",
+            "command": "browser-use \"check if github.com is up\" --headless"
+        }
+    ]
+} 

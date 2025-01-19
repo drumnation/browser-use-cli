@@ -8,6 +8,7 @@ import pyperclip
 from browser_use.agent.views import ActionResult
 from browser_use.browser.context import BrowserContext
 from browser_use.controller.service import Controller
+from browser_use.browser.views import BrowserState
 
 
 class CustomController(Controller):
@@ -31,3 +32,8 @@ class CustomController(Controller):
             await page.keyboard.type(text)
 
             return ActionResult(extracted_content=text)
+
+    async def get_browser_state(self, browser_context: BrowserContext) -> BrowserState:
+        """Get the current state of the browser"""
+        state = await browser_context.get_state(use_vision=True)
+        return state

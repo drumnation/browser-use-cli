@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Get the absolute directory of this script
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+# Add the project directory to PYTHONPATH
+export PYTHONPATH="$SCRIPT_DIR:$PYTHONPATH"
+
+# Activate the virtual environment if it exists
+if [ -f "$SCRIPT_DIR/venv/bin/activate" ]; then
+    source "$SCRIPT_DIR/venv/bin/activate"
+fi
+
+# Run the Python script with all arguments passed through
+"$SCRIPT_DIR/venv/bin/python" "$SCRIPT_DIR/browser-use-cli.py" "$@"
+
+# Deactivate the virtual environment if it was activated
+if [ -n "$VIRTUAL_ENV" ]; then
+    deactivate
+fi 

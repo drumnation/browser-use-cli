@@ -184,3 +184,12 @@ AgentHistoryList.json
 
 # For Docker
 data/
+
+# cursor
+.cursorrules
+.cursorignore
+.backup.env
+.brain/** */
+
+# Brain directory
+.brain/

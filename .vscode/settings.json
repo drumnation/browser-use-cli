@@ -7,5 +7,11 @@
       "source.fixAll.ruff": "explicit",
       "source.organizeImports.ruff": "explicit"
     }
+  },
+  "dotenv.enableAutocloaking": false,
+  "workbench.colorCustomizations": {
+    "activityBar.background": "#452606",
+    "titleBar.activeBackground": "#603608",
+    "titleBar.activeForeground": "#FEFBF7"
   }
 }
