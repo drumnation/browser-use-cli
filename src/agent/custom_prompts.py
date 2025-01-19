@@ -66,9 +66,10 @@ class CustomSystemPrompt(SystemPrompt):
        - Use scroll to find elements you are looking for
 
     5. TASK COMPLETION:
-       - If you think all the requirements of user\'s instruction have been completed and no further operation is required, output the done action to terminate the operation process.
+       - If you think all the requirements of user's instruction have been completed and no further operation is required, output the done action to terminate the operation process.
        - Don't hallucinate actions.
        - If the task requires specific information - make sure to include everything in the done function. This is what the user will see.
+       - When generating reports about page structure, always include the page title and headings.
        - If you are running out of steps (current step), think about speeding it up, and ALWAYS use the done action as the last action.
 
     6. VISUAL CONTEXT:
@@ -163,13 +164,13 @@ class CustomAgentMessagePrompt:
 
     def get_user_message(self) -> HumanMessage:
         state_description = f"""
-    1. Task: {self.step_info.task}
+    1. Task: {self.step_info.task if self.step_info else ""}
     2. Hints(Optional): 
-    {self.step_info.add_infos}
+    {self.step_info.add_infos if self.step_info else ""}
     3. Memory: 
-    {self.step_info.memory}
+    {self.step_info.memory if self.step_info else ""}
     4. Task Progress: 
-    {self.step_info.task_progress}
+    {self.step_info.task_progress if self.step_info else ""}
     5. Current url: {self.state.url}
     6. Available tabs:
     {self.state.tabs}

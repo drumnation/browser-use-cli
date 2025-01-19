@@ -8,6 +8,7 @@
 import json
 import logging
 import os
+from pathlib import Path
 
 from browser_use.browser.browser import Browser
 from browser_use.browser.context import BrowserContext, BrowserContextConfig
@@ -25,6 +26,7 @@ class CustomBrowserContext(BrowserContext):
         config: BrowserContextConfig = BrowserContextConfig()
     ):
         super(CustomBrowserContext, self).__init__(browser=browser, config=config)
+        self._context = None
 
     async def _create_context(self, browser: PlaywrightBrowser) -> PlaywrightBrowserContext:
         """Creates a new browser context with anti-detection measures and loads cookies if available."""
@@ -93,4 +95,20 @@ class CustomBrowserContext(BrowserContext):
             """
         )
 
+        self._context = context
         return context
+
+    @property
+    def context(self) -> PlaywrightBrowserContext | None:
+        """Get the underlying Playwright browser context."""
+        return self._context
+
+    async def close(self):
+        """Close the browser context and stop tracing if enabled."""
+        if self.config.trace_path and self._context:
+            trace_path = Path(self.config.trace_path)
+            trace_path.parent.mkdir(parents=True, exist_ok=True)
+            if not trace_path.suffix:
+                trace_path = trace_path / "trace.zip"
+            await self._context.tracing.stop(path=str(trace_path))
+        await super().close()

@@ -1,0 +1,64 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.9, pytest-8.3.4, pluggy-1.5.0 -- /Users/dmieloch/Dev/experiments/web-ui/venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/dmieloch/Dev/experiments/web-ui
+configfile: pytest.ini
+plugins: cov-6.0.0, asyncio-0.25.2, anyio-4.8.0, timeout-2.3.1
+asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=function
+collecting ... 
+----------------------------- live log collection ------------------------------
+INFO     root:service.py:51 Anonymized telemetry enabled. See https://github.com/gregpr07/browser-use for more information.
+INFO     httpx:_client.py:1038 HTTP Request: GET https://api.gradio.app/gradio-messaging/en "HTTP/1.1 200 OK"
+collected 28 items
+
+tests/test_browser_cli.py::TestBrowserInitialization::test_basic_initialization 
+-------------------------------- live log setup --------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:28 Cleanup start - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:39 Globals and environment reset before test
+PASSED                                                                  [ 1/28]
+------------------------------ live log teardown -------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:45 Cleanup finally - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:65 Globals and environment reset after test
+
+tests/test_browser_cli.py::TestBrowserInitialization::test_window_size 
+-------------------------------- live log setup --------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:28 Cleanup start - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:39 Globals and environment reset before test
+-------------------------------- live log call ---------------------------------
+INFO     src.agent.custom_agent:custom_agent.py:356 🚀 Starting task: go to data:text/html,<script>document.write('Window size: ' + window.innerWidth + 'x' + window.innerHeight)</script>
+INFO     src.agent.custom_agent:custom_agent.py:196 
+📍 Step 1
+INFO     httpx:_client.py:1786 HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 422 Unprocessable Entity"
+INFO     httpx:_client.py:1038 HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO     src.agent.custom_agent:custom_agent.py:128 🤷 Eval: Unknown - No previous actions to evaluate.
+INFO     src.agent.custom_agent:custom_agent.py:129 🧠 New Memory: 
+INFO     src.agent.custom_agent:custom_agent.py:130 ⏳ Task Progress: 
+INFO     src.agent.custom_agent:custom_agent.py:131 🤔 Thought: The task requires navigating to a specific URL to display the window size. The current page is 'about:blank', and no actions have been taken yet.
+INFO     src.agent.custom_agent:custom_agent.py:132 🎯 Summary: Navigate to the specified URL to display the window size.
+INFO     src.agent.custom_agent:custom_agent.py:134 🛠️  Action 1/1: {"go_to_url":{"url":"data:text/html,<script>document.write('Window size: ' + window.innerWidth + 'x' + window.innerHeight)</script>"}}
+INFO     src.agent.custom_agent:custom_agent.py:207 🧠 All Memory: 
+INFO     browser_use.controller.service:service.py:59 🔗  Navigated to data:text/html,<script>document.write('Window size: ' + window.innerWidth + 'x' + window.innerHeight)</script>
+INFO     src.agent.custom_agent:custom_agent.py:196 
+📍 Step 2
+INFO     httpx:_client.py:1786 HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 422 Unprocessable Entity"
+INFO     httpx:_client.py:1038 HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO     src.agent.custom_agent:custom_agent.py:128 ✅ Eval: Success - Successfully navigated to the specified URL and displayed the window size.
+INFO     src.agent.custom_agent:custom_agent.py:129 🧠 New Memory: Window size: 800x600
+INFO     src.agent.custom_agent:custom_agent.py:130 ⏳ Task Progress: 1. Navigated to the specified URL to display the window size.
+INFO     src.agent.custom_agent:custom_agent.py:131 🤔 Thought: The task has been completed as the window size is now displayed on the page. No further actions are required.
+INFO     src.agent.custom_agent:custom_agent.py:132 🎯 Summary: The task is complete. The window size is displayed as 800x600.
+INFO     src.agent.custom_agent:custom_agent.py:134 🛠️  Action 1/1: {"done":{"text":"The task is complete. The window size is displayed as 800x600."}}
+INFO     src.agent.custom_agent:custom_agent.py:207 🧠 All Memory: Window size: 800x600
+
+INFO     src.agent.custom_agent:custom_agent.py:218 📄 Result: The task is complete. The window size is displayed as 800x600.
+INFO     src.agent.custom_agent:custom_agent.py:399 ✅ Task completed successfully
+WARNING  src.agent.custom_agent:custom_agent.py:260 No history or first screenshot to create GIF from
+PASSED                                                                  [ 2/28]
+------------------------------ live log teardown -------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:45 Cleanup finally - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:65 Globals and environment reset after test
+
+tests/test_browser_cli.py::TestBrowserInitialization::test_headless_mode 
+-------------------------------- live log setup --------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:28 Cleanup start - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:39 Globals and environment reset before test

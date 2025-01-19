@@ -44,9 +44,13 @@ async def initialize_browser(
     """Initialize a new browser instance with the given configuration."""
     global _global_browser, _global_browser_context
     
-    if _get_browser_state():
-        print("Browser is already running. Close it first with browser-use close")
-        return False
+    # Check both environment and global variables
+    if _get_browser_state() or _global_browser is not None:
+        # Close any existing browser first
+        if _global_browser is not None:
+            await close_browser()
+        else:
+            _set_browser_state(False)
         
     window_w, window_h = window_size
     
@@ -126,36 +130,62 @@ async def run_browser_task(
         vision=vision
     )
 
-    # Update context with runtime options if needed
+    # Create new context with tracing/recording enabled
     if record or trace_path:
+        # Close existing context first
+        if _global_browser_context is not None:
+            await _global_browser_context.close()
+        
+        # Create new context with tracing/recording enabled
+        if trace_path:
+            trace_dir = Path(trace_path)
+            trace_dir.mkdir(parents=True, exist_ok=True)
+            trace_file = str(trace_dir / "trace.zip")
+        else:
+            trace_file = None
+
         _global_browser_context = await _global_browser.new_context(
             config=BrowserContextConfig(
-                trace_path=trace_path,
-                save_recording_path=record_path if record else None,
+                trace_path=trace_file,
+                save_recording_path=str(record_path) if record else None,
                 no_viewport=False,
-                browser_window_size=_global_browser_context.config.browser_window_size,
-                disable_security=_global_browser_context.config.disable_security
+                browser_window_size=BrowserContextWindowSize(
+                    width=1920,
+                    height=1080
+                ),
+                disable_security=False
             )
         )
 
-    # Create and run agent
-    agent = CustomAgent(
-        task=prompt,
-        add_infos=add_info,
-        llm=llm,
-        browser=_global_browser,
-        browser_context=_global_browser_context,
-        controller=controller,
-        system_prompt_class=CustomSystemPrompt,
-        use_vision=vision,
-        tool_call_in_content=True,
-        max_actions_per_step=max_actions
-    )
-
     try:
+        # Create and run agent
+        agent = CustomAgent(
+            task=prompt,
+            add_infos=add_info,
+            llm=llm,
+            browser=_global_browser,
+            browser_context=_global_browser_context,
+            controller=controller,
+            system_prompt_class=CustomSystemPrompt,
+            use_vision=vision,
+            tool_call_in_content=True,
+            max_actions_per_step=max_actions
+        )
+
         history = await agent.run(max_steps=max_steps)
-        return history.final_result()
+        result = history.final_result()
+
+        # Close the context if tracing was enabled
+        if trace_path:
+            await _global_browser_context.close()
+            _global_browser_context = None
+
+        return result
     except Exception as e:
+        # Close the context if tracing was enabled
+        if trace_path:
+            await _global_browser_context.close()
+            _global_browser_context = None
         raise e
 
 def main():

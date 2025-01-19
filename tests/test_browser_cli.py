@@ -2,6 +2,8 @@ import sys
 from pathlib import Path
 import tempfile
 import logging
+from io import StringIO
+import contextlib
 
 # Add project root to Python path
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -25,11 +27,16 @@ async def cleanup():
     
     logger.info(f"Cleanup start - Browser state: {_global_browser is not None}")
     
-    # Reset globals before test
+    # Reset globals and environment before test
+    if _global_browser is not None:
+        await close_browser()
+        logger.info("Browser closed")
+    
     _global_browser = None
     _global_browser_context = None
+    os.environ["BROWSER_USE_RUNNING"] = "false"
     
-    logger.info("Globals reset before test")
+    logger.info("Globals and environment reset before test")
     
     try:
         yield
@@ -45,16 +52,17 @@ async def cleanup():
                 if tasks:
                     logger.info(f"Found {len(tasks)} pending tasks")
                     for task in tasks:
-                        if not task.cancelled():
-                            task.cancel()
-                    logger.info("Tasks cancelled")
+                        task.cancel()
+                    await asyncio.gather(*tasks, return_exceptions=True)
+                    logger.info("Pending tasks cancelled")
         except Exception as e:
             logger.error(f"Error during cleanup: {e}")
+            raise
         finally:
-            # Always reset globals after test
             _global_browser = None
             _global_browser_context = None
-            logger.info("Globals reset after test")
+            os.environ["BROWSER_USE_RUNNING"] = "false"
+            logger.info("Globals and environment reset after test")
 
 class TestBrowserInitialization:
     """Test browser launch-time options"""
@@ -221,6 +229,9 @@ class TestBrowserTasks:
             trace_path=str(trace_path)
         )
         
+        # Wait a bit for the trace file to be written
+        await asyncio.sleep(1)
+        
         # Check that trace file was created
         traces = list(trace_path.glob("*.zip"))
         assert len(traces) > 0
@@ -326,32 +337,255 @@ class TestBrowserLifecycle:
         result = await run_browser_task("go to example.com")
         assert result is not None
 
-def test_cli_commands():
-    """Test CLI command parsing"""
-    import sys
-    from io import StringIO
+class TestCLICommands:
+    """Comprehensive tests for CLI command functionality"""
     
-    # Test start command
-    output = StringIO()
-    sys.stdout = output
-    sys.argv = ["browser-use", "start", "--window-size", "800x600"]
-    from cli.browser_use_cli import main
-    main()
-    assert "Browser session started successfully" in output.getvalue()
-    
-    # Test run command
-    output = StringIO()
-    sys.stdout = output
-    sys.argv = ["browser-use", "run", "go to example.com", "--model", "deepseek-chat"]
-    main()
-    assert len(output.getvalue()) > 0
-    
-    # Test close command
-    output = StringIO()
-    sys.stdout = output
-    sys.argv = ["browser-use", "close"]
-    main()
-    assert "Browser session closed" in output.getvalue()
-    
-    # Restore stdout
-    sys.stdout = sys.__stdout__ 
+    @pytest.fixture(autouse=True)
+    def setup_cli(self):
+        """Setup and cleanup for CLI tests"""
+        # Store original argv and stdout
+        self.original_argv = sys.argv.copy()
+        self.original_stdout = sys.stdout
+        
+        # Create StringIO buffer and redirect stdout
+        self.output = StringIO()
+        sys.stdout = self.output
+        
+        yield
+        
+        # Restore original argv and stdout
+        sys.argv = self.original_argv
+        sys.stdout = self.original_stdout
+        
+        # Close the StringIO buffer
+        self.output.close()
+        
+    def test_start_command_basic(self):
+        """Test basic browser start command"""
+        # Ensure output buffer is empty
+        self.output.truncate(0)
+        self.output.seek(0)
+        
+        sys.argv = ["browser-use", "start"]
+        with contextlib.redirect_stdout(self.output):
+            main()
+        output = self.output.getvalue()
+        assert "Browser session started successfully" in output
+        
+    def test_start_command_with_options(self):
+        """Test browser start with various options"""
+        # Ensure output buffer is empty
+        self.output.truncate(0)
+        self.output.seek(0)
+        
+        sys.argv = [
+            "browser-use", "start",
+            "--window-size", "800x600",
+            "--headless",
+            "--disable-security"
+        ]
+        with contextlib.redirect_stdout(self.output):
+            main()
+        output = self.output.getvalue()
+        assert "Browser session started successfully" in output
+        
+    def test_run_command_basic(self):
+        """Test basic run command"""
+        # First start the browser
+        self.output.truncate(0)
+        self.output.seek(0)
+        sys.argv = ["browser-use", "start"]
+        with contextlib.redirect_stdout(self.output):
+            main()
+        
+        # Then run a task
+        self.output.truncate(0)
+        self.output.seek(0)
+        sys.argv = [
+            "browser-use", "run",
+            "go to example.com",
+            "--model", "deepseek-chat"
+        ]
+        with contextlib.redirect_stdout(self.output):
+            main()
+        output = self.output.getvalue()
+        assert len(output) > 0
+        
+    def test_run_command_with_options(self):
+        """Test run command with various options"""
+        # First start the browser
+        self.output.truncate(0)
+        self.output.seek(0)
+        sys.argv = ["browser-use", "start"]
+        with contextlib.redirect_stdout(self.output):
+            main()
+        
+        # Then run a task with multiple options
+        self.output.truncate(0)
+        self.output.seek(0)
+        sys.argv = [
+            "browser-use", "run",
+            "go to example.com",
+            "--model", "gemini",
+            "--vision",
+            "--max-steps", "5",
+            "--max-actions", "2",
+            "--add-info", "Focus on the main content"
+        ]
+        with contextlib.redirect_stdout(self.output):
+            main()
+        output = self.output.getvalue()
+        assert len(output) > 0
+        
+    def test_close_command(self):
+        """Test browser close command"""
+        # First start the browser
+        self.output.truncate(0)
+        self.output.seek(0)
+        sys.argv = ["browser-use", "start"]
+        with contextlib.redirect_stdout(self.output):
+            main()
+        
+        # Then close it
+        self.output.truncate(0)
+        self.output.seek(0)
+        sys.argv = ["browser-use", "close"]
+        with contextlib.redirect_stdout(self.output):
+            main()
+        output = self.output.getvalue()
+        assert "Browser session closed" in output
+        
+    def test_invalid_command(self):
+        """Test handling of invalid commands"""
+        self.output.truncate(0)
+        self.output.seek(0)
+        sys.argv = ["browser-use", "invalid-command"]
+        with pytest.raises(SystemExit):
+            with contextlib.redirect_stdout(self.output):
+                main()
+            
+    def test_missing_required_args(self):
+        """Test handling of missing required arguments"""
+        self.output.truncate(0)
+        self.output.seek(0)
+        sys.argv = ["browser-use", "run"]  # Missing prompt
+        with pytest.raises(SystemExit):
+            with contextlib.redirect_stdout(self.output):
+                main()
+            
+    def test_invalid_window_size(self):
+        """Test handling of invalid window size format"""
+        self.output.truncate(0)
+        self.output.seek(0)
+        sys.argv = ["browser-use", "start", "--window-size", "invalid"]
+        with contextlib.redirect_stdout(self.output):
+            main()  # Should use default size
+        output = self.output.getvalue()
+        assert "Browser session started successfully" in output
+            
+    def test_recording_options(self):
+        """Test recording functionality via CLI"""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            # First start the browser
+            self.output.truncate(0)
+            self.output.seek(0)
+            sys.argv = ["browser-use", "start"]
+            with contextlib.redirect_stdout(self.output):
+                main()
+            
+            # Then run with recording
+            self.output.truncate(0)
+            self.output.seek(0)
+            sys.argv = [
+                "browser-use", "run",
+                "go to example.com",
+                "--record",
+                "--record-path", tmp_dir
+            ]
+            with contextlib.redirect_stdout(self.output):
+                main()
+            recordings = list(Path(tmp_dir).glob("*.webm"))
+            assert len(recordings) > 0
+            
+    def test_tracing_options(self):
+        """Test tracing functionality via CLI"""
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            # First start the browser
+            self.output.truncate(0)
+            self.output.seek(0)
+            sys.argv = ["browser-use", "start"]
+            with contextlib.redirect_stdout(self.output):
+                main()
+            
+            # Then run with tracing
+            self.output.truncate(0)
+            self.output.seek(0)
+            sys.argv = [
+                "browser-use", "run",
+                "go to example.com",
+                "--trace-path", tmp_dir
+            ]
+            with contextlib.redirect_stdout(self.output):
+                main()
+            traces = list(Path(tmp_dir).glob("*.zip"))
+            assert len(traces) > 0
+            
+    def test_model_switching_cli(self):
+        """Test switching between different models via CLI"""
+        # First start the browser
+        self.output.truncate(0)
+        self.output.seek(0)
+        sys.argv = ["browser-use", "start"]
+        with contextlib.redirect_stdout(self.output):
+            main()
+        
+        # Test with DeepSeek
+        self.output.truncate(0)
+        self.output.seek(0)
+        sys.argv = [
+            "browser-use", "run",
+            "go to example.com",
+            "--model", "deepseek-chat"
+        ]
+        with contextlib.redirect_stdout(self.output):
+            main()
+        deepseek_output = self.output.getvalue()
+        
+        # Close browser to clean up event loop
+        self.output.truncate(0)
+        self.output.seek(0)
+        sys.argv = ["browser-use", "close"]
+        with contextlib.redirect_stdout(self.output):
+            main()
+        
+        # Start new browser for Gemini test
+        self.output.truncate(0)
+        self.output.seek(0)
+        sys.argv = ["browser-use", "start"]
+        with contextlib.redirect_stdout(self.output):
+            main()
+        
+        # Test with Gemini
+        self.output.truncate(0)
+        self.output.seek(0)
+        os.environ["GOOGLE_API_MODEL"] = model_names["gemini"][0]
+        sys.argv = [
+            "browser-use", "run",
+            "go to example.com",
+            "--model", "gemini",
+            "--vision"
+        ]
+        with contextlib.redirect_stdout(self.output):
+            main()
+        gemini_output = self.output.getvalue()
+        
+        # Close browser
+        self.output.truncate(0)
+        self.output.seek(0)
+        sys.argv = ["browser-use", "close"]
+        with contextlib.redirect_stdout(self.output):
+            main()
+        
+        assert len(deepseek_output) > 0
+        assert len(gemini_output) > 0
+        assert deepseek_output != gemini_output 

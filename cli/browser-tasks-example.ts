@@ -11,6 +11,7 @@ export interface BrowserCommand {
     headless?: boolean;
     vision?: boolean;
     keepSessionAlive?: boolean;
+    trace?: boolean;
 }
 
 export interface BrowserTask {
@@ -158,6 +159,73 @@ export const browserTasks: BrowserTaskSequence[] = [
                 }
             }
         ]
+    },
+    {
+        name: "Page Structure Analysis",
+        description: "Generate detailed reports about page structure and interactive elements",
+        tasks: [
+            {
+                description: "Analyze homepage structure",
+                command: {
+                    prompt: "go to example.com and create a report about the page structure, including the page title, headings, and any interactive elements found",
+                    model: "gemini",
+                    vision: true,
+                    keepSessionAlive: true
+                }
+            },
+            {
+                description: "Analyze navigation structure",
+                command: {
+                    prompt: "focus on the navigation menu and create a detailed report of its structure and all available links",
+                    model: "gemini",
+                    vision: true,
+                    keepSessionAlive: true
+                }
+            },
+            {
+                description: "Document forms and inputs",
+                command: {
+                    prompt: "find all forms on the page and document their inputs, buttons, and validation requirements",
+                    model: "gemini",
+                    vision: true,
+                    keepSessionAlive: false
+                }
+            }
+        ]
+    },
+    {
+        name: "Debug Session",
+        description: "Record and analyze browser interactions for debugging",
+        tasks: [
+            {
+                description: "Start debug session",
+                command: {
+                    prompt: "go to example.com/login and attempt to log in with test credentials",
+                    model: "deepseek-chat",
+                    headless: false,
+                    keepSessionAlive: true,
+                    trace: true
+                }
+            },
+            {
+                description: "Navigate complex workflow",
+                command: {
+                    prompt: "complete the multi-step registration process",
+                    model: "deepseek-chat",
+                    keepSessionAlive: true,
+                    trace: true
+                }
+            },
+            {
+                description: "Generate debug report",
+                command: {
+                    prompt: "create a report of all actions taken and any errors encountered",
+                    model: "claude-3",
+                    keepSessionAlive: false,
+                    trace: true
+                }
+            }
+        ]
     }
 ];
 
@@ -168,6 +236,7 @@ const executeTask = (task: BrowserCommand): string => {
     if (task.headless) options.push('--headless');
     if (task.vision) options.push('--vision');
     if (task.keepSessionAlive) options.push('--keep-browser-open');
+    if (task.trace) options.push('--trace-path ./tmp/traces/trace.zip');
     
     return `browser-use "${task.prompt}" ${options.join(' ')}`.trim();
 };
