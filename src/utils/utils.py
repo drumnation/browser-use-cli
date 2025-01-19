@@ -9,6 +9,7 @@ import os
 import time
 from pathlib import Path
 from typing import Dict, Optional
+from pydantic import SecretStr
 
 from langchain_anthropic import ChatAnthropic
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -30,15 +31,17 @@ def get_llm_model(provider: str, **kwargs):
             base_url = kwargs.get("base_url")
 
         if not kwargs.get("api_key", ""):
-            api_key = os.getenv("ANTHROPIC_API_KEY", "")
+            api_key = SecretStr(os.getenv("ANTHROPIC_API_KEY") or "")
         else:
-            api_key = kwargs.get("api_key")
+            api_key = SecretStr(kwargs.get("api_key") or "")
 
         return ChatAnthropic(
             model_name=kwargs.get("model_name", "claude-3-5-sonnet-20240620"),
             temperature=kwargs.get("temperature", 0.0),
             base_url=base_url,
             api_key=api_key,
+            timeout=kwargs.get("timeout", 60),
+            stop=kwargs.get("stop", None)
         )
     elif provider == "openai":
         if not kwargs.get("base_url", ""):
@@ -47,15 +50,16 @@ def get_llm_model(provider: str, **kwargs):
             base_url = kwargs.get("base_url")
 
         if not kwargs.get("api_key", ""):
-            api_key = os.getenv("OPENAI_API_KEY", "")
+            api_key = SecretStr(os.getenv("OPENAI_API_KEY") or "")
         else:
-            api_key = kwargs.get("api_key")
+            api_key = SecretStr(kwargs.get("api_key") or "")
 
         return ChatOpenAI(
-            model=kwargs.get("model_name", "gpt-4o"),
+            model=kwargs.get("model_name", "gpt-4"),
             temperature=kwargs.get("temperature", 0.0),
             base_url=base_url,
             api_key=api_key,
+            timeout=kwargs.get("timeout", 60),
         )
     elif provider == "deepseek":
         if not kwargs.get("base_url", ""):
@@ -64,25 +68,37 @@ def get_llm_model(provider: str, **kwargs):
             base_url = kwargs.get("base_url")
 
         if not kwargs.get("api_key", ""):
-            api_key = os.getenv("DEEPSEEK_API_KEY", "")
+            api_key = SecretStr(os.getenv("DEEPSEEK_API_KEY") or "")
         else:
-            api_key = kwargs.get("api_key")
+            api_key = SecretStr(kwargs.get("api_key") or "")
 
         return ChatOpenAI(
             model=kwargs.get("model_name", "deepseek-chat"),
             temperature=kwargs.get("temperature", 0.0),
             base_url=base_url,
             api_key=api_key,
+            timeout=kwargs.get("timeout", 60),
         )
     elif provider == "gemini":
         if not kwargs.get("api_key", ""):
-            api_key = os.getenv("GOOGLE_API_KEY", "")
+            api_key = SecretStr(os.getenv("GOOGLE_API_KEY") or "")
         else:
-            api_key = kwargs.get("api_key")
+            api_key = SecretStr(kwargs.get("api_key") or "")
+        
+        # Get model name from environment or kwargs
+        model_name = kwargs.get("model_name")
+        if not model_name:
+            if kwargs.get("vision"):
+                model_name = os.getenv("GOOGLE_API_MODEL", "gemini-1.5-flash")
+            else:
+                model_name = os.getenv("GOOGLE_API_TYPE", "gemini-1.5-flash")
+
         return ChatGoogleGenerativeAI(
-            model=kwargs.get("model_name", "gemini-2.0-flash-exp"),
+            model=model_name,
             temperature=kwargs.get("temperature", 0.0),
-            google_api_key=api_key,
+            api_key=api_key,
+            timeout=kwargs.get("timeout", 60),
+            convert_system_message_to_human=True
         )
     elif provider == "ollama":
         return ChatOllama(
@@ -97,9 +113,9 @@ def get_llm_model(provider: str, **kwargs):
         else:
             base_url = kwargs.get("base_url")
         if not kwargs.get("api_key", ""):
-            api_key = os.getenv("AZURE_OPENAI_API_KEY", "")
+            api_key = SecretStr(os.getenv("AZURE_OPENAI_API_KEY") or "")
         else:
-            api_key = kwargs.get("api_key")
+            api_key = SecretStr(kwargs.get("api_key") or "")
         return AzureChatOpenAI(
             model=kwargs.get("model_name", "gpt-4o"),
             temperature=kwargs.get("temperature", 0.0),

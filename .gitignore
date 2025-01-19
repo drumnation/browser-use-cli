@@ -193,3 +193,5 @@ data/
 
 # Brain directory
 .brain/
+
+.env.google

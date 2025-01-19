@@ -121,8 +121,9 @@ async def run_browser_task(
     # Get LLM model
     llm = utils.get_llm_model(
         provider="deepseek" if model == "deepseek-chat" else model,
-        model_name=model,
-        temperature=0.8
+        model_name=os.getenv("GOOGLE_API_MODEL", "gemini-pro-vision") if model == "gemini" else model,
+        temperature=0.8,
+        vision=vision
     )
 
     # Update context with runtime options if needed

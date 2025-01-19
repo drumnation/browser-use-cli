@@ -11,6 +11,7 @@ import pytest
 import asyncio
 import os
 from cli.browser_use_cli import initialize_browser, run_browser_task, close_browser, main, _global_browser, _global_browser_context
+from src.utils.utils import model_names  # Import model names from utils
 
 # Configure logging for tests
 logging.basicConfig(level=logging.INFO)
@@ -164,6 +165,7 @@ class TestBrowserTasks:
                 raise
         
         # Test Gemini
+        os.environ["GOOGLE_API_MODEL"] = model_names["gemini"][0]  # Set model via environment
         result2 = await run_browser_task(
             "what do you see on the page?",
             model="gemini",
@@ -175,6 +177,9 @@ class TestBrowserTasks:
         
     async def test_vision_capability(self):
         """Test vision capabilities"""
+        # Set Gemini model via environment
+        os.environ["GOOGLE_API_MODEL"] = model_names["gemini"][0]
+        
         # Without vision
         result1 = await run_browser_task(
             "what do you see on example.com?",
