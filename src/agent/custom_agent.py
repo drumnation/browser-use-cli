@@ -8,11 +8,12 @@ import json
 import logging
 import pdb
 import traceback
-from typing import Optional, Type
+from typing import Optional, Type, Any, Dict
 from PIL import Image, ImageDraw, ImageFont
 import os
 import base64
 import io
+import datetime
 
 from browser_use.agent.prompts import SystemPrompt
 from browser_use.agent.service import Agent
@@ -37,11 +38,13 @@ from langchain_core.messages import (
     BaseMessage,
 )
 from src.utils.agent_state import AgentState
+from src.utils.logging import BatchedEventLogger
 
 from .custom_massage_manager import CustomMassageManager
 from .custom_views import CustomAgentOutput, CustomAgentStepInfo
 
 logger = logging.getLogger(__name__)
+batched_logger = BatchedEventLogger(logger)
 
 
 class CustomAgent(Agent):
@@ -117,23 +120,41 @@ class CustomAgent(Agent):
         self.AgentOutput = CustomAgentOutput.type_with_custom_actions(self.ActionModel)
 
     def _log_response(self, response: CustomAgentOutput) -> None:
-        """Log the model's response"""
-        if "Success" in response.current_state.prev_action_evaluation:
-            emoji = "✅"
-        elif "Failed" in response.current_state.prev_action_evaluation:
-            emoji = "❌"
-        else:
-            emoji = "🤷"
-
-        logger.info(f"{emoji} Eval: {response.current_state.prev_action_evaluation}")
-        logger.info(f"🧠 New Memory: {response.current_state.important_contents}")
-        logger.info(f"⏳ Task Progress: {response.current_state.completed_contents}")
-        logger.info(f"🤔 Thought: {response.current_state.thought}")
-        logger.info(f"🎯 Summary: {response.current_state.summary}")
+        """Log the model's response in a structured format"""
+        evaluation_status = "success" if "Success" in response.current_state.prev_action_evaluation else "failed"
+        
+        log_data = {
+            "timestamp": datetime.datetime.now().isoformat(),
+            "action": "model_response",
+            "status": evaluation_status,
+            "state": {
+                "evaluation": response.current_state.prev_action_evaluation,
+                "memory": response.current_state.important_contents,
+                "progress": response.current_state.completed_contents,
+                "thought": response.current_state.thought,
+                "summary": response.current_state.summary
+            }
+        }
+        
+        logger.info(
+            f"Model Response: {evaluation_status}",
+            extra={
+                "event_type": "model_response",
+                "event_data": log_data
+            }
+        )
+        
+        # Batch action logging
         for i, action in enumerate(response.action):
-            logger.info(
-                f"🛠️  Action {i + 1}/{len(response.action)}: {action.model_dump_json(exclude_unset=True)}"
+            batched_logger.add_event(
+                "action",
+                {
+                    "action_number": i + 1,
+                    "total_actions": len(response.action),
+                    "action_data": json.loads(action.model_dump_json(exclude_unset=True))
+                }
             )
+        batched_logger.flush()
 
     def update_step_info(
             self, model_output: CustomAgentOutput, step_info: CustomAgentStepInfo = None
@@ -193,7 +214,19 @@ class CustomAgent(Agent):
     @time_execution_async("--step")
     async def step(self, step_info: Optional[CustomAgentStepInfo] = None) -> None:
         """Execute one step of the task"""
-        logger.info(f"\n📍 Step {self.n_steps}")
+        step_data = {
+            "step_number": self.n_steps,
+            "timestamp": datetime.datetime.now().isoformat()
+        }
+        
+        logger.info(
+            f"Starting step {self.n_steps}",
+            extra={
+                "event_type": "step_start",
+                "event_data": step_data
+            }
+        )
+        
         state = None
         model_output = None
         result: list[ActionResult] = []
@@ -204,9 +237,18 @@ class CustomAgent(Agent):
             input_messages = self.message_manager.get_messages()
             model_output = await self.get_next_action(input_messages)
             self.update_step_info(model_output, step_info)
-            logger.info(f"🧠 All Memory: {step_info.memory}")
+            
+            if step_info:
+                logger.debug(
+                    "Step memory updated",
+                    extra={
+                        "event_type": "memory_update",
+                        "event_data": {"memory": step_info.memory}
+                    }
+                )
+            
             self._save_conversation(input_messages, model_output)
-            self.message_manager._remove_last_state_message()  # we dont want the whole state in the chat history
+            self.message_manager._remove_last_state_message()
             self.message_manager.add_model_output(model_output)
 
             result: list[ActionResult] = await self.controller.multi_act(
@@ -215,17 +257,37 @@ class CustomAgent(Agent):
             self._last_result = result
 
             if len(result) > 0 and result[-1].is_done:
-                logger.info(f"📄 Result: {result[-1].extracted_content}")
+                logger.info(
+                    "Task completed",
+                    extra={
+                        "event_type": "task_complete",
+                        "event_data": {
+                            "result": result[-1].extracted_content
+                        }
+                    }
+                )
 
             self.consecutive_failures = 0
 
         except Exception as e:
             result = self._handle_step_error(e)
             self._last_result = result
+            logger.error(
+                f"Step error: {str(e)}",
+                extra={
+                    "event_type": "step_error",
+                    "event_data": {
+                        "error": str(e),
+                        "traceback": traceback.format_exc()
+                    }
+                },
+                exc_info=True
+            )
 
         finally:
             if not result:
                 return
+            
             for r in result:
                 if r.error:
                     self.telemetry.capture(
@@ -234,8 +296,28 @@ class CustomAgent(Agent):
                             error=r.error,
                         )
                     )
+                    logger.error(
+                        f"Action error: {r.error}",
+                        extra={
+                            "event_type": "action_error",
+                            "event_data": {
+                                "error": r.error
+                            }
+                        }
+                    )
+            
             if state:
                 self._make_history_item(model_output, state, result)
+            
+            step_data["status"] = "completed"
+            logger.info(
+                f"Step {self.n_steps} completed",
+                extra={
+                    "event_type": "step_complete",
+                    "event_data": step_data
+                }
+            )
+
     def create_history_gif(
             self,
             output_path: str = 'agent_history.gif',

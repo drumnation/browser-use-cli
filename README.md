@@ -257,3 +257,40 @@ playwright install
 
 - [x] **2025/01/10:** Thanks to @casistack. Now we have Docker Setup option and also Support keep browser open between tasks.[Video tutorial demo](https://github.com/browser-use/web-ui/issues/1#issuecomment-2582511750).
 - [x] **2025/01/06:** Thanks to @richard-devbot. A New and Well-Designed WebUI is released. [Video tutorial demo](https://github.com/warmshao/browser-use-webui/issues/1#issuecomment-2573393113).
+
+## Fork Information
+This is a fork of the original browser-use project with additional features and improvements.
+
+## Changelog
+
+### January 2025 - Logging System Overhaul
+- **Enhanced Logging System**
+  - Added structured task logging with context and state tracking
+  - Implemented color-coded log levels and task states
+  - Added visual separators between task phases
+  - Introduced emoji indicators for different action types (🌐 navigation, 🖱️ interaction, 📑 extraction)
+  - Added status symbols for task states (→ running, ✓ complete, × failed)
+
+- **Error Handling Improvements**
+  - Implemented smart retry logic with exponential backoff
+  - Added structured error logging with context
+  - Introduced visual error separators
+  - Added retry history and statistics tracking
+
+- **Progress Tracking**
+  - Added percentage-based progress tracking
+  - Implemented step duration tracking
+  - Added detailed browser state information
+  - Introduced performance metrics breakdown
+
+- **Log Management**
+  - Added semantic step descriptions
+  - Implemented message filtering and deduplication
+  - Added support for both JSON and human-readable output
+  - Introduced custom color schemes and formatting options
+
+### Coming Soon
+- Log buffering for high-frequency events
+- Recovery suggestions for common errors
+- Real-time monitoring dashboard
+- Interactive log viewer interface

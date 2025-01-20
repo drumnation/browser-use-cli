@@ -7,15 +7,29 @@
 
 import pdb
 import logging
-
-from dotenv import load_dotenv
-
-load_dotenv()
 import os
+import sys
 import glob
 import asyncio
 import argparse
 import os
+import warnings
+
+from dotenv import load_dotenv
+from src.utils.logging import setup_logging, PRODUCTION_EXCLUDE_PATTERNS
+
+# Filter out the specific deprecation warning from langchain-google-genai
+warnings.filterwarnings('ignore', message='Convert_system_message_to_human will be deprecated!')
+
+load_dotenv()
+
+# Setup logging before importing other modules
+setup_logging(
+    level=os.getenv("LOG_LEVEL", "INFO"),
+    use_json=os.getenv("LOG_JSON", "true").lower() == "true",
+    log_file=os.getenv("LOG_FILE"),
+    exclude_patterns=PRODUCTION_EXCLUDE_PATTERNS if os.getenv("ENVIRONMENT") == "production" else None
+)
 
 logger = logging.getLogger(__name__)
 
