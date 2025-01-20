@@ -10,6 +10,41 @@ This fork of browser-use/web-ui adds CLI support specifically designed for AI ag
   - Tracing and debugging
   - Report generation
 
+### Quick Start
+
+```bash
+# Run a task (browser will auto-start if needed)
+browser-use run "go to example.com and create a report about the page structure"
+
+# Run with specific model and options
+browser-use run --model claude-3 --vision --trace-path ./traces "analyze the layout and visual elements"
+
+# Explicitly start browser with custom options (optional)
+browser-use start --headless --window-size 1920x1080
+
+# Close browser when done
+browser-use close
+```
+
+### CLI Commands
+
+- `start` - (Optional) Initialize browser session with custom options:
+  - `--headless` - Run in headless mode
+  - `--window-size` - Set window dimensions (e.g., "1920x1080")
+  - `--disable-security` - Disable security features
+  - `--user-data-dir` - Use custom Chrome profile
+  - `--proxy` - Set proxy server
+
+- `run` - Execute tasks (auto-starts browser if needed):
+  - `--model` - Choose LLM (deepseek-chat, gemini, gpt-4, claude-3)
+  - `--vision` - Enable visual analysis
+  - `--record` - Record browser session
+  - `--trace-path` - Save debugging traces
+  - `--max-steps` - Limit task steps
+  - `--add-info` - Provide additional context
+
+- `close` - Clean up browser session
+
 ### Example Tasks
 
 The [browser-tasks-example.ts](cli/browser-tasks-example.ts) provides ready-to-use task sequences for:

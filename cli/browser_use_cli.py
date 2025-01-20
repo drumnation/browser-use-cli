@@ -106,18 +106,46 @@ async def run_browser_task(
     trace_path=None,
     max_steps=10,
     max_actions=1,
-    add_info=""
+    add_info="",
+    on_init=None,
+    headless=False,
+    window_size=(1920, 1080),
+    disable_security=False,
+    user_data_dir=None,
+    proxy=None
 ):
-    """Execute a task using the current browser instance."""
+    """Execute a task using the current browser instance, auto-initializing if needed."""
     global _global_browser, _global_browser_context
     
+    # Check if browser is running and initialize if needed
     if not _get_browser_state():
-        print("No browser session found. Start one with: browser-use start")
-        return
+        print("Browser not running. Starting browser session...")
+        if not await initialize_browser(
+            headless=headless,
+            window_size=window_size,
+            disable_security=disable_security,
+            user_data_dir=user_data_dir,
+            proxy=proxy
+        ):
+            return "Browser initialization failed"
         
+        # Signal successful initialization if callback provided
+        if _get_browser_state() and on_init:
+            await on_init()
+    
+    # Verify browser state is consistent
     if _global_browser is None or _global_browser_context is None:
-        print("Browser session state is inconsistent. Try closing and restarting the browser.")
-        return
+        print("Browser session state is inconsistent. Attempting to reinitialize...")
+        if not await initialize_browser(
+            headless=headless,
+            window_size=window_size,
+            disable_security=disable_security,
+            user_data_dir=user_data_dir,
+            proxy=proxy
+        ):
+            return "Browser reinitialization failed"
+        if _global_browser is None or _global_browser_context is None:
+            return "Browser session state remains inconsistent after reinitialization"
 
     # Initialize controller
     controller = CustomController()
@@ -248,9 +276,15 @@ def main():
             trace_path=args.trace_path,
             max_steps=args.max_steps,
             max_actions=args.max_actions,
-            add_info=args.add_info
+            add_info=args.add_info,
+            headless=False,
+            window_size=(1920, 1080),
+            disable_security=False,
+            user_data_dir=None,
+            proxy=None
         ))
-        print(result)
+        if result:
+            print(result)
         
     elif args.command == "close":
         # Close browser
