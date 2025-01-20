@@ -12,6 +12,10 @@
                         "type": "string",
                         "description": "The natural language instruction (e.g., 'go to google.com and search for OpenAI'). **Ensure URLs are well-formed and include the protocol (e.g., https://).**"
                     },
+                    "url": {
+                        "type": "string",
+                        "description": "The starting URL for the browser automation task. Must include the protocol (e.g., https://example.com)."
+                    },
                     "provider": {
                         "type": "string",
                         "enum": [
@@ -75,7 +79,8 @@
                     }
                 },
                 "required": [
-                    "prompt"
+                    "prompt",
+                    "url"
                 ]
             }
         }
@@ -83,27 +88,27 @@
     "examples": [
         {
             "description": "Basic usage with default provider (DeepSeek)",
-            "command": "browser-use run \"go to https://www.google.com and search for OpenAI\""
+            "command": "browser-use run \"search for OpenAI\" --url \"https://www.google.com\""
         },
         {
             "description": "Using Google Gemini with vision for visual analysis",
-            "command": "browser-use run \"go to https://www.openai.com and analyze the visual layout\" --provider Google --vision"
+            "command": "browser-use run \"analyze the visual layout\" --url \"https://www.openai.com\" --provider Google --vision"
         },
         {
             "description": "Using OpenAI for complex analysis",
-            "command": "browser-use run \"analyze the layout and design of https://www.example.com\" --provider OpenAI --vision"
+            "command": "browser-use run \"analyze the layout and design\" --url \"https://www.example.com\" --provider OpenAI --vision"
         },
         {
             "description": "Using Anthropic with specific model version",
-            "command": "browser-use run \"analyze the documentation at https://docs.example.com\" --provider Anthropic --model-index 1"
+            "command": "browser-use run \"analyze the documentation\" --url \"https://docs.example.com\" --provider Anthropic --model-index 1"
         },
         {
             "description": "Running a check in headless mode",
-            "command": "browser-use run \"check if https://www.github.com is up\" --provider Deepseek --headless"
+            "command": "browser-use run \"check if site is up\" --url \"https://www.github.com\" --provider Deepseek --headless"
         },
         {
             "description": "Recording a debug session",
-            "command": "browser-use run \"test the login process at https://example.com\" --provider Google --record --record-path ./debug_session"
+            "command": "browser-use run \"test the login process\" --url \"https://example.com\" --provider Google --record --record-path ./debug_session"
         }
     ]
 } 

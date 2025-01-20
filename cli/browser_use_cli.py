@@ -18,6 +18,7 @@ from src.controller.custom_controller import CustomController
 from src.agent.custom_prompts import CustomSystemPrompt
 from src.utils import utils
 from dotenv import load_dotenv
+from src.trace_analyzer import analyze_trace
 
 # Load .env from the project root
 load_dotenv(Path(project_root) / '.env')
@@ -107,12 +108,14 @@ async def close_browser():
 
 async def run_browser_task(
     prompt, 
+    url=None,
     provider="Deepseek",
     model_index=None,
     vision=False,
     record=False,
     record_path=None,
     trace_path=None,
+    hide_trace=False,
     max_steps=10,
     max_actions=1,
     add_info="",
@@ -125,6 +128,19 @@ async def run_browser_task(
 ):
     """Execute a task using the current browser instance, auto-initializing if needed."""
     global _global_browser, _global_browser_context
+    
+    # Validate URL if provided
+    if url:
+        try:
+            from urllib.parse import urlparse
+            result = urlparse(url)
+            if not all([result.scheme, result.netloc]):
+                raise ValueError("Invalid URL format")
+        except Exception as e:
+            return f"Invalid URL provided: {str(e)}"
+
+    # Store the trace file path if tracing is enabled
+    trace_file = None
     
     # Check if browser is running and initialize if needed
     if not _get_browser_state():
@@ -162,11 +178,28 @@ async def run_browser_task(
     # Normalize provider name to lowercase for consistency
     provider = provider.lower()
 
+    # Handle Deepseek + vision case
+    if provider == "deepseek" and vision:
+        print("WARNING: Deepseek does not support vision capabilities. Falling back to standard Deepseek model.")
+        vision = False
+
     # Select appropriate model based on provider, model_index, and vision requirement
-    if provider not in utils.model_names:
+    provider_key = provider
+    if provider == "google":
+        provider_key = "gemini"
+    elif provider == "openai":
+        provider_key = "openai"
+    elif provider == "anthropic":
+        provider_key = "anthropic"
+    elif provider == "deepseek":
+        provider_key = "deepseek"
+    else:
         raise ValueError(f"Unsupported provider: {provider}")
 
-    available_models = utils.model_names[provider]
+    if provider_key not in utils.model_names:
+        raise ValueError(f"No models found for provider: {provider}")
+
+    available_models = utils.model_names[provider_key]
     
     if model_index is not None:
         if not (0 <= model_index < len(available_models)):
@@ -174,18 +207,18 @@ async def run_browser_task(
         model_name = available_models[model_index]
     else:
         # Default model selection based on vision requirement
-        if provider == "deepseek":
+        if provider_key == "deepseek":
             model_name = available_models[0]  # deepseek-chat
-        elif provider == "google":
+        elif provider_key == "gemini":
             model_name = available_models[0]  # gemini-1.5-pro
-        elif provider == "openai":
+        elif provider_key == "openai":
             model_name = available_models[0]  # gpt-4o
-        elif provider == "anthropic":
+        elif provider_key == "anthropic":
             model_name = available_models[0]  # claude-3-5-sonnet-latest
 
     # Get LLM model
     llm = utils.get_llm_model(
-        provider=provider,
+        provider=provider_key,
         model_name=model_name,
         temperature=0.8,
         vision=vision
@@ -200,8 +233,10 @@ async def run_browser_task(
         # Create new context with tracing/recording enabled
         if trace_path:
             trace_dir = Path(trace_path)
-            trace_dir.mkdir(parents=True, exist_ok=True)
-            trace_file = str(trace_dir / "trace.zip")
+            if not trace_path.endswith('.zip'):
+                trace_dir = trace_dir / 'trace.zip'
+            trace_dir.parent.mkdir(parents=True, exist_ok=True)
+            trace_file = str(trace_dir)
         else:
             trace_file = None
 
@@ -217,37 +252,52 @@ async def run_browser_task(
                 disable_security=False
             )
         )
-
-    try:
-        # Create and run agent
-        agent = CustomAgent(
-            task=prompt,
-            add_infos=add_info,
-            llm=llm,
-            browser=_global_browser,
-            browser_context=_global_browser_context,
-            controller=controller,
-            system_prompt_class=CustomSystemPrompt,
-            use_vision=vision,
-            tool_call_in_content=True,
-            max_actions_per_step=max_actions
-        )
-
-        history = await agent.run(max_steps=max_steps)
-        result = history.final_result()
-
-        # Close the context if tracing was enabled
-        if trace_path:
-            await _global_browser_context.close()
-            _global_browser_context = None
-
-        return result
-    except Exception as e:
-        # Close the context if tracing was enabled
-        if trace_path:
-            await _global_browser_context.close()
-            _global_browser_context = None
-        raise e
+    
+    # Initialize agent with starting URL if provided
+    agent = CustomAgent(
+        task=f"First, navigate to {url}. Then, {prompt}" if url else prompt,
+        add_infos=add_info,
+        llm=llm,
+        browser=_global_browser,
+        browser_context=_global_browser_context,
+        controller=controller,
+        system_prompt_class=CustomSystemPrompt,
+        use_vision=vision,
+        tool_call_in_content=True,
+        max_actions_per_step=max_actions
+    )
+    
+    # Run task
+    history = await agent.run(max_steps=max_steps)
+    result = history.final_result()
+    
+    # Close the context to ensure trace is saved
+    if _global_browser_context is not None:
+        await _global_browser_context.close()
+        _global_browser_context = None
+    
+    # Analyze and display trace if enabled
+    if trace_file and not hide_trace:
+        print("\nTrace Analysis:")
+        print("=" * 50)
+        try:
+            # Find the actual trace file in the nested directory
+            trace_files = list(Path(str(trace_path)).rglob('*.zip'))
+            if trace_files:
+                actual_trace = str(trace_files[0])  # Use the first trace file found
+                print("\nTrace Analysis:")
+                print("=" * 50)
+                try:
+                    trace_analysis = await analyze_trace(actual_trace)
+                    print(json.dumps(trace_analysis, indent=2))
+                except Exception as e:
+                    print(f"Failed to analyze trace: {e}")
+            else:
+                print("No trace file found")
+        except Exception as e:
+            print(f"Error finding trace file: {e}")
+    
+    return result
 
 def main():
     parser = argparse.ArgumentParser(description="Control a browser using natural language")
@@ -266,6 +316,7 @@ def main():
     run_parser = subparsers.add_parser("run", help="Run a task in the current browser session")
     run_parser.add_argument("--temp-file", help="Path to temporary file for storing browser state")
     run_parser.add_argument("prompt", help="The task to perform")
+    run_parser.add_argument("--url", required=True, help="The starting URL for the browser automation task")
     run_parser.add_argument("--provider", "-p", choices=["Deepseek", "Google", "OpenAI", "Anthropic"], 
                            default="Deepseek", help="The LLM provider to use (system will select appropriate model)")
     run_parser.add_argument("--model-index", "-m", type=int,
@@ -274,6 +325,7 @@ def main():
     run_parser.add_argument("--record", action="store_true", help="Enable session recording")
     run_parser.add_argument("--record-path", default="./tmp/record_videos", help="Path to save recordings")
     run_parser.add_argument("--trace-path", default="./tmp/traces", help="Path to save debugging traces")
+    run_parser.add_argument("--hide-trace", action="store_true", help="Don't display trace analysis after task completion")
     run_parser.add_argument("--max-steps", type=int, default=10, help="Maximum number of steps per task")
     run_parser.add_argument("--max-actions", type=int, default=1, help="Maximum actions per step")
     run_parser.add_argument("--add-info", help="Additional context for the agent")
@@ -281,6 +333,11 @@ def main():
     # Close command
     close_parser = subparsers.add_parser("close", help="Close the current browser session")
     close_parser.add_argument("--temp-file", help="Path to temporary file for storing browser state")
+
+    # Analyze trace command
+    analyze_parser = subparsers.add_parser("analyze-trace", help="Analyze a Playwright trace file")
+    analyze_parser.add_argument("trace_path", help="Path to the trace file")
+    analyze_parser.add_argument("--output", "-o", help="Path to save the analysis output (default: print to stdout)")
 
     args = parser.parse_args()
     
@@ -311,12 +368,14 @@ def main():
         # Run task
         result = asyncio.run(run_browser_task(
             prompt=args.prompt,
+            url=args.url,
             provider=args.provider,
             model_index=args.model_index,
             vision=args.vision,
             record=args.record,
             record_path=args.record_path if args.record else None,
             trace_path=args.trace_path,
+            hide_trace=args.hide_trace,
             max_steps=args.max_steps,
             max_actions=args.max_actions,
             add_info=args.add_info,
@@ -334,6 +393,16 @@ def main():
         asyncio.run(close_browser())
         print("Browser session closed")
         _set_browser_state(False, args.temp_file)
+
+    elif args.command == "analyze-trace":
+        # Analyze trace
+        result = asyncio.run(analyze_trace(args.trace_path))
+        if args.output:
+            with open(args.output, 'w') as f:
+                json.dump(result, f, indent=2)
+            print(f"Analysis saved to {args.output}")
+        else:
+            print(json.dumps(result, indent=2))
         
     else:
         parser.print_help()

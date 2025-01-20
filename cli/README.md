@@ -71,25 +71,25 @@ browser-use start --proxy "localhost:8080"
 ### Run Tasks
 ```bash
 # Basic task
-browser-use run "go to example.com and analyze the page"
+browser-use run "analyze the page" --url "https://example.com"
 
 # With vision capabilities
-browser-use run "describe the visual layout" --vision
+browser-use run "describe the visual layout" --url "https://example.com" --vision
 
 # With specific provider and model
-browser-use run "analyze this webpage" --provider Google --model-index 1
+browser-use run "analyze this webpage" --url "https://example.com" --provider Google --model-index 1
 
 # With recording
-browser-use run "test the checkout flow" --record --record-path ./recordings
+browser-use run "test the checkout flow" --url "https://example.com/checkout" --record --record-path ./recordings
 
 # With debugging traces
-browser-use run "analyze form submission" --trace-path ./traces
+browser-use run "analyze form submission" --url "https://example.com/form" --trace-path ./traces
 
 # With step limits
-browser-use run "complex task" --max-steps 5 --max-actions 2
+browser-use run "complex task" --url "https://example.com" --max-steps 5 --max-actions 2
 
 # With additional context
-browser-use run "analyze pricing" --add-info "Focus on enterprise plans"
+browser-use run "analyze pricing" --url "https://example.com/pricing" --add-info "Focus on enterprise plans"
 ```
 
 ### Close Browser
@@ -133,7 +133,8 @@ CHROME_PERSISTENT_SESSION=true  # Keep browser open between tasks
 ### Visual Analysis Task
 ```bash
 browser-use run \
-  "go to https://example.com and analyze the page layout" \
+  "analyze the page layout" \
+  --url "https://example.com" \
   --provider Google \
   --vision \
   --record \
@@ -143,7 +144,8 @@ browser-use run \
 ### Multi-Step Task
 ```bash
 browser-use run \
-  "go to the login page, fill the form, and verify success" \
+  "fill the form and verify success" \
+  --url "https://example.com/login" \
   --provider Anthropic \
   --max-steps 5 \
   --trace-path ./traces/login
@@ -153,6 +155,7 @@ browser-use run \
 ```bash
 browser-use run \
   "research pricing information for top 3 competitors" \
+  --url "https://example.com" \
   --provider OpenAI \
   --add-info "Focus on enterprise features and annual pricing"
 ``` 

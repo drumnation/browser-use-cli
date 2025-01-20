@@ -7,7 +7,9 @@
 
 export interface BrowserCommand {
     prompt: string;
-    model?: 'deepseek-chat' | 'gemini' | 'gpt-4' | 'claude-3';
+    url: string;
+    provider?: 'Deepseek' | 'Google' | 'OpenAI' | 'Anthropic';
+    modelIndex?: number;
     headless?: boolean;
     vision?: boolean;
     record?: boolean;
@@ -16,6 +18,9 @@ export interface BrowserCommand {
     maxSteps?: number;
     maxActions?: number;
     addInfo?: string;
+    windowSize?: string;
+    userDataDir?: string;
+    proxy?: string;
 }
 
 export interface BrowserTask {
@@ -39,23 +44,25 @@ export const browserTasks: BrowserTaskSequence[] = [
             {
                 description: "Search Amazon for wireless earbuds",
                 command: {
-                    prompt: "go to amazon.com and search for 'wireless earbuds' and tell me the price of the top 3 results",
-                    model: "gemini",
-                    vision: true
+                    prompt: "search for 'wireless earbuds' and tell me the price of the top 3 results",
+                    url: "https://www.amazon.com",
+                    provider: "Deepseek"
                 }
             },
             {
                 description: "Search Best Buy for comparison",
                 command: {
-                    prompt: "go to bestbuy.com and search for 'wireless earbuds' and tell me the price of the top 3 results",
-                    model: "gemini",
-                    vision: true
+                    prompt: "search for 'wireless earbuds' and tell me the price of the top 3 results",
+                    url: "https://www.bestbuy.com",
+                    provider: "Deepseek"
                 }
             },
             {
                 description: "Create price comparison",
                 command: {
-                    prompt: "create a comparison table of the prices from both sites"
+                    prompt: "create a comparison table of the prices from both sites",
+                    url: "about:blank",
+                    provider: "Deepseek"
                 }
             }
         ]
@@ -67,21 +74,27 @@ export const browserTasks: BrowserTaskSequence[] = [
             {
                 description: "Check main site",
                 command: {
-                    prompt: "go to example.com and check if it loads properly",
+                    prompt: "check if it loads properly",
+                    url: "https://example.com",
+                    provider: "Deepseek",
                     headless: true
                 }
             },
             {
                 description: "Verify API health",
                 command: {
-                    prompt: "go to api.example.com/health and tell me the status",
+                    prompt: "check the API health status",
+                    url: "https://api.example.com/health",
+                    provider: "Deepseek",
                     headless: true
                 }
             },
             {
                 description: "Test documentation site",
                 command: {
-                    prompt: "go to docs.example.com and verify all navigation links are working",
+                    prompt: "verify all navigation links are working",
+                    url: "https://docs.example.com",
+                    provider: "Deepseek",
                     headless: true
                 }
             }
@@ -94,28 +107,33 @@ export const browserTasks: BrowserTaskSequence[] = [
             {
                 description: "List articles",
                 command: {
-                    prompt: "go to blog.example.com and list all article titles from the homepage",
-                    model: "gemini",
-                    vision: true
+                    prompt: "list all article titles from the homepage",
+                    url: "https://blog.example.com",
+                    provider: "Deepseek"
                 }
             },
             {
                 description: "Analyze first article",
                 command: {
-                    prompt: "click on the first article and summarize its main points"
+                    prompt: "click on the first article and summarize its main points",
+                    url: "https://blog.example.com",
+                    provider: "Deepseek"
                 },
                 subtasks: [
                     {
                         description: "Get metadata",
                         command: {
-                            prompt: "tell me the author, publication date, and reading time"
+                            prompt: "tell me the author, publication date, and reading time",
+                            url: "https://blog.example.com",
+                            provider: "Deepseek"
                         }
                     },
                     {
                         description: "Analyze comments",
                         command: {
                             prompt: "scroll to the comments section and summarize the main discussion points",
-                            vision: true
+                            url: "https://blog.example.com",
+                            provider: "Deepseek"
                         }
                     }
                 ]
@@ -129,30 +147,36 @@ export const browserTasks: BrowserTaskSequence[] = [
             {
                 description: "Initial navigation and basic text extraction",
                 command: {
-                    prompt: "go to docs.github.com and navigate to the Actions documentation",
-                    model: "deepseek-chat",  // Use DeepSeek for basic navigation
+                    prompt: "navigate to the Actions documentation and extract basic text content",
+                    url: "https://docs.github.com",
+                    provider: "Deepseek"
                 }
             },
             {
                 description: "Visual analysis of page structure",
                 command: {
                     prompt: "analyze the layout of the page and tell me how the documentation is structured, including sidebars, navigation, and content areas",
-                    model: "gemini",  // Switch to Gemini for visual analysis
+                    url: "https://docs.github.com",
+                    provider: "Google",
                     vision: true,
+                    modelIndex: 1,
+                    addInfo: "Only using Google here because we need vision capabilities"
                 }
             },
             {
                 description: "Complex content summarization",
                 command: {
                     prompt: "summarize the key concepts of GitHub Actions based on the documentation",
-                    model: "claude-3",  // Switch to Claude for complex summarization
+                    url: "https://docs.github.com",
+                    provider: "Deepseek"
                 }
             },
             {
                 description: "Extract code examples",
                 command: {
                     prompt: "find and list all YAML workflow examples on the page",
-                    model: "deepseek-chat",  // Back to DeepSeek for code extraction
+                    url: "https://docs.github.com",
+                    provider: "Deepseek"
                 }
             }
         ]
@@ -164,25 +188,29 @@ export const browserTasks: BrowserTaskSequence[] = [
             {
                 description: "Analyze homepage structure",
                 command: {
-                    prompt: "go to example.com and create a report about the page structure, including the page title, headings, and any interactive elements found",
-                    model: "gemini",
-                    vision: true,
+                    prompt: "create a report about the page structure, including the page title, headings, and any interactive elements found",
+                    url: "https://example.com",
+                    provider: "Deepseek"
                 }
             },
             {
                 description: "Analyze navigation structure",
                 command: {
                     prompt: "focus on the navigation menu and create a detailed report of its structure and all available links",
-                    model: "gemini",
+                    url: "https://example.com",
+                    provider: "Google",
                     vision: true,
+                    addInfo: "Only using Google here because we need vision capabilities for complex layout analysis"
                 }
             },
             {
                 description: "Document forms and inputs",
                 command: {
                     prompt: "find all forms on the page and document their inputs, buttons, and validation requirements",
-                    model: "gemini",
-                    vision: true
+                    url: "https://example.com",
+                    provider: "Google",
+                    vision: true,
+                    addInfo: "Only using Google here because we need vision capabilities for form analysis"
                 }
             }
         ]
@@ -194,17 +222,23 @@ export const browserTasks: BrowserTaskSequence[] = [
             {
                 description: "Start debug session",
                 command: {
-                    prompt: "go to example.com/login and attempt to log in with test credentials",
-                    model: "deepseek-chat",
+                    prompt: "attempt to log in with test credentials",
+                    url: "https://example.com/login",
+                    provider: "Deepseek",
                     headless: false,
-                    tracePath: "./tmp/traces/login"
+                    tracePath: "./tmp/traces/login",
+                    record: true,
+                    recordPath: "./recordings/login"
                 }
             },
             {
                 description: "Navigate complex workflow",
                 command: {
                     prompt: "complete the multi-step registration process",
-                    model: "deepseek-chat",
+                    url: "https://example.com/register",
+                    provider: "Deepseek",
+                    maxSteps: 5,
+                    maxActions: 2,
                     tracePath: "./tmp/traces/registration"
                 }
             },
@@ -212,8 +246,9 @@ export const browserTasks: BrowserTaskSequence[] = [
                 description: "Generate debug report",
                 command: {
                     prompt: "create a report of all actions taken and any errors encountered",
-                    model: "claude-3",
-                    tracePath: "./tmp/traces/report"
+                    url: "about:blank",
+                    provider: "Deepseek",
+                    addInfo: "Focus on error patterns and user interaction points"
                 }
             }
         ]
@@ -224,7 +259,8 @@ export const browserTasks: BrowserTaskSequence[] = [
 const executeTask = (task: BrowserCommand): string => {
     const options: string[] = [];
     
-    if (task.model) options.push(`--model ${task.model}`);
+    if (task.provider) options.push(`--provider ${task.provider}`);
+    if (task.modelIndex !== undefined) options.push(`--model-index ${task.modelIndex}`);
     if (task.headless) options.push('--headless');
     if (task.vision) options.push('--vision');
     if (task.record) {
@@ -235,8 +271,11 @@ const executeTask = (task: BrowserCommand): string => {
     if (task.maxSteps) options.push(`--max-steps ${task.maxSteps}`);
     if (task.maxActions) options.push(`--max-actions ${task.maxActions}`);
     if (task.addInfo) options.push(`--add-info "${task.addInfo}"`);
+    if (task.windowSize) options.push(`--window-size ${task.windowSize}`);
+    if (task.userDataDir) options.push(`--user-data-dir "${task.userDataDir}"`);
+    if (task.proxy) options.push(`--proxy "${task.proxy}"`);
     
-    return `browser-use run "${task.prompt}" ${options.join(' ')}`.trim();
+    return `browser-use run "${task.prompt}" --url "${task.url}" ${options.join(' ')}`.trim();
 };
 
 // Example usage:

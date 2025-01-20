@@ -1,0 +1,125 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.11.9, pytest-8.3.4, pluggy-1.5.0 -- /Users/dmieloch/Dev/experiments/web-ui/venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/dmieloch/Dev/experiments/web-ui
+configfile: pytest.ini
+plugins: cov-6.0.0, asyncio-0.25.2, anyio-4.8.0, timeout-2.3.1
+asyncio: mode=Mode.AUTO, asyncio_default_fixture_loop_scope=function
+collecting ... 
+----------------------------- live log collection ------------------------------
+INFO     root:service.py:51 Anonymized telemetry enabled. See https://github.com/gregpr07/browser-use for more information.
+INFO     httpx:_client.py:1038 HTTP Request: GET https://api.gradio.app/gradio-messaging/en "HTTP/1.1 200 OK"
+collected 133 items
+
+tests/test_browser_cli.py::TestBrowserInitialization::test_basic_initialization 
+-------------------------------- live log setup --------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:28 Cleanup start - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:39 Globals and environment reset before test
+PASSED                                                                [  1/133]
+------------------------------ live log teardown -------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:45 Cleanup finally - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:65 Globals and environment reset after test
+
+tests/test_browser_cli.py::TestBrowserInitialization::test_window_size 
+-------------------------------- live log setup --------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:28 Cleanup start - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:39 Globals and environment reset before test
+FAILED                                                                [  2/133]
+------------------------------ live log teardown -------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:45 Cleanup finally - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:65 Globals and environment reset after test
+
+tests/test_browser_cli.py::TestBrowserInitialization::test_headless_mode 
+-------------------------------- live log setup --------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:28 Cleanup start - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:39 Globals and environment reset before test
+FAILED                                                                [  3/133]
+------------------------------ live log teardown -------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:45 Cleanup finally - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:65 Globals and environment reset after test
+
+tests/test_browser_cli.py::TestBrowserInitialization::test_user_data_dir 
+-------------------------------- live log setup --------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:28 Cleanup start - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:39 Globals and environment reset before test
+PASSED                                                                [  4/133]
+------------------------------ live log teardown -------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:45 Cleanup finally - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:65 Globals and environment reset after test
+
+tests/test_browser_cli.py::TestBrowserInitialization::test_proxy_configuration 
+-------------------------------- live log setup --------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:28 Cleanup start - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:39 Globals and environment reset before test
+PASSED                                                                [  5/133]
+------------------------------ live log teardown -------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:45 Cleanup finally - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:65 Globals and environment reset after test
+
+tests/test_browser_cli.py::TestBrowserInitialization::test_disable_security 
+-------------------------------- live log setup --------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:28 Cleanup start - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:39 Globals and environment reset before test
+FAILED                                                                [  6/133]
+------------------------------ live log teardown -------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:45 Cleanup finally - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:65 Globals and environment reset after test
+
+tests/test_browser_cli.py::TestBrowserInitialization::test_multiple_initialization 
+-------------------------------- live log setup --------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:28 Cleanup start - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:39 Globals and environment reset before test
+FAILED                                                                [  7/133]
+------------------------------ live log teardown -------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:45 Cleanup finally - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:65 Globals and environment reset after test
+
+tests/test_browser_cli.py::TestBrowserTasks::test_model_switching 
+-------------------------------- live log setup --------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:28 Cleanup start - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:39 Globals and environment reset before test
+FAILED                                                                [  8/133]
+------------------------------ live log teardown -------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:45 Cleanup finally - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:65 Globals and environment reset after test
+
+tests/test_browser_cli.py::TestBrowserTasks::test_vision_capability 
+-------------------------------- live log setup --------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:28 Cleanup start - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:39 Globals and environment reset before test
+FAILED                                                                [  9/133]
+------------------------------ live log teardown -------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:45 Cleanup finally - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:65 Globals and environment reset after test
+
+tests/test_browser_cli.py::TestBrowserTasks::test_recording 
+-------------------------------- live log setup --------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:28 Cleanup start - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:39 Globals and environment reset before test
+-------------------------------- live log call ---------------------------------
+INFO     src.agent.custom_agent:custom_agent.py:438 🚀 Starting task: go to example.com
+INFO     src.agent.custom_agent:custom_agent.py:222 Starting step 1
+INFO     httpx:_client.py:1786 HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 422 Unprocessable Entity"
+INFO     httpx:_client.py:1038 HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO     src.agent.custom_agent:custom_agent.py:139 Model Response: failed
+INFO     src.agent.custom_agent:logging.py:96 Batch: 1 action events
+INFO     browser_use.controller.service:service.py:59 🔗  Navigated to https://example.com
+INFO     src.agent.custom_agent:custom_agent.py:313 Step 2 completed
+INFO     src.agent.custom_agent:custom_agent.py:222 Starting step 2
+INFO     httpx:_client.py:1786 HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 422 Unprocessable Entity"
+INFO     httpx:_client.py:1038 HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 200 OK"
+INFO     src.agent.custom_agent:custom_agent.py:139 Model Response: success
+INFO     src.agent.custom_agent:logging.py:96 Batch: 1 action events
+INFO     src.agent.custom_agent:custom_agent.py:260 Task completed
+INFO     src.agent.custom_agent:custom_agent.py:313 Step 3 completed
+INFO     src.agent.custom_agent:custom_agent.py:481 ✅ Task completed successfully
+WARNING  src.agent.custom_agent:custom_agent.py:342 No history or first screenshot to create GIF from
+PASSED                                                                [ 10/133]
+------------------------------ live log teardown -------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:45 Cleanup finally - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:65 Globals and environment reset after test
+
+tests/test_browser_cli.py::TestBrowserTasks::test_tracing 
+-------------------------------- live log setup --------------------------------
+INFO     tests.test_browser_cli:test_browser_cli.py:28 Cleanup start - Browser state: False
+INFO     tests.test_browser_cli:test_browser_cli.py:39 Globals and environment reset before test
