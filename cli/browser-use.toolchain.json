@@ -27,6 +27,34 @@
                         "type": "boolean",
                         "default": false,
                         "description": "Enable vision capabilities for supported models (optional)"
+                    },
+                    "record": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Enable session recording (optional)"
+                    },
+                    "recordPath": {
+                        "type": "string",
+                        "default": "./tmp/record_videos",
+                        "description": "Path to save recordings (optional)"
+                    },
+                    "tracePath": {
+                        "type": "string",
+                        "description": "Path to save debugging traces (optional)"
+                    },
+                    "maxSteps": {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Maximum number of steps per task (optional)"
+                    },
+                    "maxActions": {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "Maximum actions per step (optional)"
+                    },
+                    "addInfo": {
+                        "type": "string",
+                        "description": "Additional context for the agent (optional)"
                     }
                 },
                 "required": ["prompt"]
@@ -36,15 +64,31 @@
     "examples": [
         {
             "description": "Basic usage",
-            "command": "browser-use \"go to google.com and search for OpenAI\""
+            "command": "browser-use run \"go to google.com and search for OpenAI\""
         },
         {
             "description": "Using vision to analyze a webpage",
-            "command": "browser-use \"go to openai.com and tell me what you see\" --model gemini --vision"
+            "command": "browser-use run \"go to openai.com and tell me what you see\" --model gemini --vision"
         },
         {
             "description": "Running a check in headless mode",
-            "command": "browser-use \"check if github.com is up\" --headless"
+            "command": "browser-use run \"check if github.com is up\" --headless"
+        },
+        {
+            "description": "Recording a debug session",
+            "command": "browser-use run \"complete the login process\" --record --record-path ./tmp/debug_session"
+        },
+        {
+            "description": "Using traces for debugging",
+            "command": "browser-use run \"test the checkout flow\" --trace-path ./tmp/traces/checkout"
+        },
+        {
+            "description": "Starting a new browser session",
+            "command": "browser-use start --user-data-dir '/Users/dmieloch/Library/Application Support/Google/Chrome/Default'"
+        },
+        {
+            "description": "Closing a browser session",
+            "command": "browser-use close --temp-file /tmp/browser_use_state"
         }
     ]
 } 

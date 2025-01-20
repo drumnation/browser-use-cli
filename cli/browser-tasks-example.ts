@@ -10,8 +10,12 @@ export interface BrowserCommand {
     model?: 'deepseek-chat' | 'gemini' | 'gpt-4' | 'claude-3';
     headless?: boolean;
     vision?: boolean;
-    keepSessionAlive?: boolean;
-    trace?: boolean;
+    record?: boolean;
+    recordPath?: string;
+    tracePath?: string;
+    maxSteps?: number;
+    maxActions?: number;
+    addInfo?: string;
 }
 
 export interface BrowserTask {
@@ -37,8 +41,7 @@ export const browserTasks: BrowserTaskSequence[] = [
                 command: {
                     prompt: "go to amazon.com and search for 'wireless earbuds' and tell me the price of the top 3 results",
                     model: "gemini",
-                    vision: true,
-                    keepSessionAlive: true
+                    vision: true
                 }
             },
             {
@@ -46,15 +49,13 @@ export const browserTasks: BrowserTaskSequence[] = [
                 command: {
                     prompt: "go to bestbuy.com and search for 'wireless earbuds' and tell me the price of the top 3 results",
                     model: "gemini",
-                    vision: true,
-                    keepSessionAlive: true
+                    vision: true
                 }
             },
             {
                 description: "Create price comparison",
                 command: {
-                    prompt: "create a comparison table of the prices from both sites",
-                    keepSessionAlive: false
+                    prompt: "create a comparison table of the prices from both sites"
                 }
             }
         ]
@@ -130,7 +131,6 @@ export const browserTasks: BrowserTaskSequence[] = [
                 command: {
                     prompt: "go to docs.github.com and navigate to the Actions documentation",
                     model: "deepseek-chat",  // Use DeepSeek for basic navigation
-                    keepSessionAlive: true
                 }
             },
             {
@@ -139,7 +139,6 @@ export const browserTasks: BrowserTaskSequence[] = [
                     prompt: "analyze the layout of the page and tell me how the documentation is structured, including sidebars, navigation, and content areas",
                     model: "gemini",  // Switch to Gemini for visual analysis
                     vision: true,
-                    keepSessionAlive: true
                 }
             },
             {
@@ -147,7 +146,6 @@ export const browserTasks: BrowserTaskSequence[] = [
                 command: {
                     prompt: "summarize the key concepts of GitHub Actions based on the documentation",
                     model: "claude-3",  // Switch to Claude for complex summarization
-                    keepSessionAlive: true
                 }
             },
             {
@@ -155,7 +153,6 @@ export const browserTasks: BrowserTaskSequence[] = [
                 command: {
                     prompt: "find and list all YAML workflow examples on the page",
                     model: "deepseek-chat",  // Back to DeepSeek for code extraction
-                    keepSessionAlive: false  // Close browser after final task
                 }
             }
         ]
@@ -170,7 +167,6 @@ export const browserTasks: BrowserTaskSequence[] = [
                     prompt: "go to example.com and create a report about the page structure, including the page title, headings, and any interactive elements found",
                     model: "gemini",
                     vision: true,
-                    keepSessionAlive: true
                 }
             },
             {
@@ -179,7 +175,6 @@ export const browserTasks: BrowserTaskSequence[] = [
                     prompt: "focus on the navigation menu and create a detailed report of its structure and all available links",
                     model: "gemini",
                     vision: true,
-                    keepSessionAlive: true
                 }
             },
             {
@@ -187,8 +182,7 @@ export const browserTasks: BrowserTaskSequence[] = [
                 command: {
                     prompt: "find all forms on the page and document their inputs, buttons, and validation requirements",
                     model: "gemini",
-                    vision: true,
-                    keepSessionAlive: false
+                    vision: true
                 }
             }
         ]
@@ -203,8 +197,7 @@ export const browserTasks: BrowserTaskSequence[] = [
                     prompt: "go to example.com/login and attempt to log in with test credentials",
                     model: "deepseek-chat",
                     headless: false,
-                    keepSessionAlive: true,
-                    trace: true
+                    tracePath: "./tmp/traces/login"
                 }
             },
             {
@@ -212,8 +205,7 @@ export const browserTasks: BrowserTaskSequence[] = [
                 command: {
                     prompt: "complete the multi-step registration process",
                     model: "deepseek-chat",
-                    keepSessionAlive: true,
-                    trace: true
+                    tracePath: "./tmp/traces/registration"
                 }
             },
             {
@@ -221,24 +213,30 @@ export const browserTasks: BrowserTaskSequence[] = [
                 command: {
                     prompt: "create a report of all actions taken and any errors encountered",
                     model: "claude-3",
-                    keepSessionAlive: false,
-                    trace: true
+                    tracePath: "./tmp/traces/report"
                 }
             }
         ]
     }
 ];
 
-// Example of executing a task sequence
+// Updated execute task function to match CLI arguments
 const executeTask = (task: BrowserCommand): string => {
     const options: string[] = [];
+    
     if (task.model) options.push(`--model ${task.model}`);
     if (task.headless) options.push('--headless');
     if (task.vision) options.push('--vision');
-    if (task.keepSessionAlive) options.push('--keep-browser-open');
-    if (task.trace) options.push('--trace-path ./tmp/traces/trace.zip');
+    if (task.record) {
+        options.push('--record');
+        if (task.recordPath) options.push(`--record-path ${task.recordPath}`);
+    }
+    if (task.tracePath) options.push(`--trace-path ${task.tracePath}`);
+    if (task.maxSteps) options.push(`--max-steps ${task.maxSteps}`);
+    if (task.maxActions) options.push(`--max-actions ${task.maxActions}`);
+    if (task.addInfo) options.push(`--add-info "${task.addInfo}"`);
     
-    return `browser-use "${task.prompt}" ${options.join(' ')}`.trim();
+    return `browser-use run "${task.prompt}" ${options.join(' ')}`.trim();
 };
 
 // Example usage:

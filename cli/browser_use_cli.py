@@ -27,12 +27,20 @@ _global_browser = None
 _global_browser_context = None
 
 def _get_browser_state():
-    """Get browser state from environment."""
-    return os.environ.get("BROWSER_USE_RUNNING", "false").lower() == "true"
+    """Get browser state from temporary file."""
+    temp_file = os.path.join(tempfile.gettempdir(), "browser_use_state")
+    try:
+        with open(temp_file, "r") as f:
+            return f.read().strip().lower() == "true"
+    except FileNotFoundError:
+        return False
 
-def _set_browser_state(running=True):
-    """Set browser state in environment."""
-    os.environ["BROWSER_USE_RUNNING"] = str(running).lower()
+def _set_browser_state(running=True, temp_file_path=None):
+    """Set browser state in a temporary file."""
+    value = str(running).lower()
+    if temp_file_path:
+        with open(temp_file_path, "w") as f:
+            f.write(value)
 
 async def initialize_browser(
     headless=False,
@@ -220,16 +228,18 @@ def main():
     parser = argparse.ArgumentParser(description="Control a browser using natural language")
     subparsers = parser.add_subparsers(dest="command", help="Commands")
     
-    # Start command - browser initialization
+    # Start command
     start_parser = subparsers.add_parser("start", help="Start a new browser session")
+    start_parser.add_argument("--temp-file", help="Path to temporary file for storing browser state")
     start_parser.add_argument("--headless", action="store_true", help="Run browser in headless mode")
     start_parser.add_argument("--window-size", default="1920x1080", help="Browser window size (WxH)")
     start_parser.add_argument("--disable-security", action="store_true", help="Disable browser security features")
     start_parser.add_argument("--user-data-dir", help="Use custom Chrome profile directory")
     start_parser.add_argument("--proxy", help="Proxy server URL")
     
-    # Run command - task execution
+    # Run command
     run_parser = subparsers.add_parser("run", help="Run a task in the current browser session")
+    run_parser.add_argument("--temp-file", help="Path to temporary file for storing browser state")
     run_parser.add_argument("prompt", help="The task to perform")
     run_parser.add_argument("--model", "-m", choices=["deepseek-chat", "gemini", "gpt-4", "claude-3"], 
                            default="deepseek-chat", help="The LLM model to use")
@@ -241,9 +251,10 @@ def main():
     run_parser.add_argument("--max-actions", type=int, default=1, help="Maximum actions per step")
     run_parser.add_argument("--add-info", help="Additional context for the agent")
     
-    # Close command - cleanup
-    subparsers.add_parser("close", help="Close the current browser session")
-    
+    # Close command
+    close_parser = subparsers.add_parser("close", help="Close the current browser session")
+    close_parser.add_argument("--temp-file", help="Path to temporary file for storing browser state")
+
     args = parser.parse_args()
     
     if args.command == "start":
@@ -264,6 +275,10 @@ def main():
         ))
         if success:
             print("Browser session started successfully")
+            _set_browser_state(True, args.temp_file)
+        else:
+            print("Failed to start browser session")
+            _set_browser_state(False, args.temp_file)
             
     elif args.command == "run":
         # Run task
@@ -290,6 +305,7 @@ def main():
         # Close browser
         asyncio.run(close_browser())
         print("Browser session closed")
+        _set_browser_state(False, args.temp_file)
         
     else:
         parser.print_help()
