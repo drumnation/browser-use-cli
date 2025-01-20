@@ -97,8 +97,7 @@ def get_llm_model(provider: str, **kwargs):
             model=model_name,
             temperature=kwargs.get("temperature", 0.0),
             api_key=api_key,
-            timeout=kwargs.get("timeout", 60),
-            convert_system_message_to_human=True
+            timeout=kwargs.get("timeout", 60)
         )
     elif provider == "ollama":
         return ChatOllama(
@@ -122,18 +121,19 @@ def get_llm_model(provider: str, **kwargs):
             api_version="2024-05-01-preview",
             azure_endpoint=base_url,
             api_key=api_key,
+            timeout=kwargs.get("timeout", 60),
         )
     else:
         raise ValueError(f"Unsupported provider: {provider}")
     
 # Predefined model names for common providers
 model_names = {
-    "anthropic": ["claude-3-5-sonnet-20240620", "claude-3-opus-20240229"],
-    "openai": ["gpt-4o", "gpt-4", "gpt-3.5-turbo"],
+    "anthropic": ["claude-3-5-sonnet-latest", "claude-3-5-sonnet-20241022"],
+    "openai": ["gpt-4o"],
     "deepseek": ["deepseek-chat"],
-    "gemini": ["gemini-2.0-flash-exp", "gemini-2.0-flash-thinking-exp", "gemini-1.5-flash-latest", "gemini-1.5-flash-8b-latest", "gemini-2.0-flash-thinking-exp-1219" ],
+    "gemini": ["gemini-1.5-pro", "gemini-2.0-flash"],
     "ollama": ["qwen2.5:7b", "llama2:7b"],
-    "azure_openai": ["gpt-4o", "gpt-4", "gpt-3.5-turbo"]
+    "azure_openai": ["gpt-4", "gpt-3.5-turbo"]
 }
 
 # Callback to update the model name dropdown based on the selected provider

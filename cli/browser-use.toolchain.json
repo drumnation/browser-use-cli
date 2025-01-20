@@ -10,85 +10,100 @@
                 "properties": {
                     "prompt": {
                         "type": "string",
-                        "description": "The natural language instruction (e.g., 'go to google.com and search for OpenAI')"
+                        "description": "The natural language instruction (e.g., 'go to google.com and search for OpenAI'). **Ensure URLs are well-formed and include the protocol (e.g., https://).**"
                     },
-                    "model": {
+                    "provider": {
                         "type": "string",
-                        "enum": ["deepseek-chat", "gemini", "gpt-4", "claude-3"],
-                        "default": "deepseek-chat",
-                        "description": "The LLM model to use (optional)"
+                        "enum": [
+                            "Deepseek",
+                            "Google",
+                            "OpenAI",
+                            "Anthropic"
+                        ],
+                        "default": "Deepseek",
+                        "description": "The LLM provider to use. DeepSeek is recommended for most tasks due to its cost-effectiveness and performance. The system will automatically select the appropriate model based on your task requirements (e.g., vision capabilities)."
                     },
-                    "headless": {
-                        "type": "boolean",
-                        "default": false,
-                        "description": "Run browser in headless mode (optional)"
+                    "model_index": {
+                        "type": "integer",
+                        "description": "Optional index to select a specific model from the provider's available models (0-based). Available models per provider:\nDeepseek: [0: deepseek-chat]\nGoogle: [0: gemini-1.5-pro, 1: gemini-2.0-flash]\nOpenAI: [0: gpt-4o]\nAnthropic: [0: claude-3-5-sonnet-latest, 1: claude-3-5-sonnet-20241022]"
                     },
                     "vision": {
                         "type": "boolean",
                         "default": false,
-                        "description": "Enable vision capabilities for supported models (optional)"
+                        "description": "Enable vision capabilities (optional). **When enabled, the system will automatically select a vision-capable model from your chosen provider.**"
+                    },
+                    "headless": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Run browser in headless mode (optional). **Headless mode might be necessary for certain environments or tasks but can limit interaction with visually-dependent elements.**"
                     },
                     "record": {
                         "type": "boolean",
                         "default": false,
-                        "description": "Enable session recording (optional)"
+                        "description": "Enable session recording (optional). **Useful for debugging and understanding the agent's actions.**"
                     },
                     "recordPath": {
                         "type": "string",
                         "default": "./tmp/record_videos",
-                        "description": "Path to save recordings (optional)"
+                        "description": "Path to save recordings (optional). **Ensure the directory exists and is writable.**"
                     },
                     "tracePath": {
                         "type": "string",
-                        "description": "Path to save debugging traces (optional)"
+                        "description": "Path to save debugging traces (optional). **Traces can provide detailed information about the automation process.**"
                     },
                     "maxSteps": {
                         "type": "integer",
                         "default": 10,
-                        "description": "Maximum number of steps per task (optional)"
+                        "description": "Maximum number of steps per task (optional). **Increase this for complex tasks, but be mindful of potential infinite loops.**"
                     },
                     "maxActions": {
                         "type": "integer",
                         "default": 1,
-                        "description": "Maximum actions per step (optional)"
+                        "description": "Maximum actions per step (optional). **Adjust this based on the complexity of each step.**"
                     },
                     "addInfo": {
                         "type": "string",
-                        "description": "Additional context for the agent (optional)"
+                        "description": "Additional context or instructions for the agent (optional). **Use this to provide specific details not covered in the main prompt.**"
+                    },
+                    "tempFile": {
+                        "type": "string",
+                        "description": "Path to temporary file to store the browser session state (optional). **Used for resuming or closing specific sessions.**"
+                    },
+                    "userDataDir": {
+                        "type": "string",
+                        "description": "Path to user data directory for a persistent browser session (optional). **Use this to maintain browser state across sessions (e.g., cookies, extensions).**"
                     }
                 },
-                "required": ["prompt"]
+                "required": [
+                    "prompt"
+                ]
             }
         }
     ],
     "examples": [
         {
-            "description": "Basic usage",
-            "command": "browser-use run \"go to google.com and search for OpenAI\""
+            "description": "Basic usage with default provider (DeepSeek)",
+            "command": "browser-use run \"go to https://www.google.com and search for OpenAI\""
         },
         {
-            "description": "Using vision to analyze a webpage",
-            "command": "browser-use run \"go to openai.com and tell me what you see\" --model gemini --vision"
+            "description": "Using Google Gemini with vision for visual analysis",
+            "command": "browser-use run \"go to https://www.openai.com and analyze the visual layout\" --provider Google --vision"
+        },
+        {
+            "description": "Using OpenAI for complex analysis",
+            "command": "browser-use run \"analyze the layout and design of https://www.example.com\" --provider OpenAI --vision"
+        },
+        {
+            "description": "Using Anthropic with specific model version",
+            "command": "browser-use run \"analyze the documentation at https://docs.example.com\" --provider Anthropic --model-index 1"
         },
         {
             "description": "Running a check in headless mode",
-            "command": "browser-use run \"check if github.com is up\" --headless"
+            "command": "browser-use run \"check if https://www.github.com is up\" --provider Deepseek --headless"
         },
         {
             "description": "Recording a debug session",
-            "command": "browser-use run \"complete the login process\" --record --record-path ./tmp/debug_session"
-        },
-        {
-            "description": "Using traces for debugging",
-            "command": "browser-use run \"test the checkout flow\" --trace-path ./tmp/traces/checkout"
-        },
-        {
-            "description": "Starting a new browser session",
-            "command": "browser-use start --user-data-dir '/Users/dmieloch/Library/Application Support/Google/Chrome/Default'"
-        },
-        {
-            "description": "Closing a browser session",
-            "command": "browser-use close --temp-file /tmp/browser_use_state"
+            "command": "browser-use run \"test the login process at https://example.com\" --provider Google --record --record-path ./debug_session"
         }
     ]
 } 

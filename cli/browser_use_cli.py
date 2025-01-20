@@ -107,7 +107,8 @@ async def close_browser():
 
 async def run_browser_task(
     prompt, 
-    model="deepseek-chat",
+    provider="Deepseek",
+    model_index=None,
     vision=False,
     record=False,
     record_path=None,
@@ -158,10 +159,34 @@ async def run_browser_task(
     # Initialize controller
     controller = CustomController()
 
+    # Normalize provider name to lowercase for consistency
+    provider = provider.lower()
+
+    # Select appropriate model based on provider, model_index, and vision requirement
+    if provider not in utils.model_names:
+        raise ValueError(f"Unsupported provider: {provider}")
+
+    available_models = utils.model_names[provider]
+    
+    if model_index is not None:
+        if not (0 <= model_index < len(available_models)):
+            raise ValueError(f"Invalid model_index {model_index} for provider {provider}. Available indices: 0-{len(available_models)-1}")
+        model_name = available_models[model_index]
+    else:
+        # Default model selection based on vision requirement
+        if provider == "deepseek":
+            model_name = available_models[0]  # deepseek-chat
+        elif provider == "google":
+            model_name = available_models[0]  # gemini-1.5-pro
+        elif provider == "openai":
+            model_name = available_models[0]  # gpt-4o
+        elif provider == "anthropic":
+            model_name = available_models[0]  # claude-3-5-sonnet-latest
+
     # Get LLM model
     llm = utils.get_llm_model(
-        provider="deepseek" if model == "deepseek-chat" else model,
-        model_name=os.getenv("GOOGLE_API_MODEL", "gemini-pro-vision") if model == "gemini" else model,
+        provider=provider,
+        model_name=model_name,
         temperature=0.8,
         vision=vision
     )
@@ -241,8 +266,10 @@ def main():
     run_parser = subparsers.add_parser("run", help="Run a task in the current browser session")
     run_parser.add_argument("--temp-file", help="Path to temporary file for storing browser state")
     run_parser.add_argument("prompt", help="The task to perform")
-    run_parser.add_argument("--model", "-m", choices=["deepseek-chat", "gemini", "gpt-4", "claude-3"], 
-                           default="deepseek-chat", help="The LLM model to use")
+    run_parser.add_argument("--provider", "-p", choices=["Deepseek", "Google", "OpenAI", "Anthropic"], 
+                           default="Deepseek", help="The LLM provider to use (system will select appropriate model)")
+    run_parser.add_argument("--model-index", "-m", type=int,
+                           help="Optional index to select a specific model from the provider's available models (0-based)")
     run_parser.add_argument("--vision", action="store_true", help="Enable vision capabilities")
     run_parser.add_argument("--record", action="store_true", help="Enable session recording")
     run_parser.add_argument("--record-path", default="./tmp/record_videos", help="Path to save recordings")
@@ -284,7 +311,8 @@ def main():
         # Run task
         result = asyncio.run(run_browser_task(
             prompt=args.prompt,
-            model=args.model,
+            provider=args.provider,
+            model_index=args.model_index,
             vision=args.vision,
             record=args.record,
             record_path=args.record_path if args.record else None,
